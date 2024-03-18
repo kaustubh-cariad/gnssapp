@@ -43,7 +43,7 @@ class ExampleInstrumentedTest {
         assertEquals("com.example.gnssapp", appContext.packageName)
     }
     @Test
-    fun checkButtonIsPresent() {
+    fun testGnssAppInfo() {
         val mockGnssInfoProvider: IGnssInfoProvider = mock(GnssAntennaInfoProvider::class.java)
         onView(withId(R.id.button))
             .check(matches(isDisplayed()))
