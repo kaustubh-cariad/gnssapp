@@ -33,7 +33,12 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    packaging {
+        resources.excludes.add("META-INF/LICENSE.md")
+        resources.excludes.add("META-INF/LICENSE-notice.md")
+    }
 }
+
 
 dependencies {
 
@@ -43,11 +48,15 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.junit.ktx)
+    implementation(libs.androidx.espresso.core)
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
-    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
     androidTestImplementation("androidx.test.espresso:espresso-intents:3.4.0")
-    testImplementation("org.mockito:mockito-core:3.11.2")
-    androidTestImplementation("org.mockito:mockito-android:3.11.2")
+    testImplementation("androidx.test:rules:1.1.1")
+    testImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
+    androidTestImplementation("androidx.test:runner:1.1.1")
+    androidTestImplementation ("org.mockito:mockito-android:3.3.3")
+    androidTestImplementation ("org.mockito:mockito-inline:2.13.0")
 }
+

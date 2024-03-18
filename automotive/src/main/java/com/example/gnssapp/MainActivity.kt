@@ -1,60 +1,64 @@
 package com.example.gnssapp
 
-import GnssAntennaInfoProvider
-import GnssInfoListener
-import GnssInfoReceiver
-import android.content.IntentFilter
+import GNSS.GnssAntennaInfoProvider
+import GNSS.GnssInfoReceiver
+import GNSS.IGnssInfoProvider
+import android.location.GnssAntennaInfo
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.util.Log
-import android.widget.TextView
 
-class MainActivity : AppCompatActivity(), GnssInfoListener {
+class MainActivity : AppCompatActivity() {
     val TAG = "MainActivity"
-    private lateinit var gnssAntennaInfoProvider: GnssAntennaInfoProvider
+    var ERROR = "No Gnss Antena info received. Please try again"
+    var gnssInfoProvider: IGnssInfoProvider? = null
     private lateinit var gnssInfoReceiver: GnssInfoReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+        gnssInfoProvider = GnssAntennaInfoProvider(this)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        //Initialise GnSSAntenInfo provider
-        gnssAntennaInfoProvider = GnssAntennaInfoProvider(this)
-
-        //Initialse GnSSInfo receiver
-        gnssInfoReceiver = GnssInfoReceiver(this)
-        val filter = IntentFilter("com.example.broadcast.GNSS_ANTENNA_INFO")
-        registerReceiver(gnssInfoReceiver, filter)
 
         val button: Button = findViewById(R.id.button)
         button.setOnClickListener {
             Log.i(TAG, "Button clicked")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                gnssAntennaInfoProvider.startListening()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && gnssInfoProvider != null) {
+                (gnssInfoProvider as GnssAntennaInfoProvider).registerGnssAntennaInfoListener { gnssAntennaInfo ->
+                    updateTextField(gnssAntennaInfo)
+                }
             }
         }
     }
 
+    private fun updateTextField(gnssAntennaInfo: GnssAntennaInfo?) {
+        runOnUiThread {
+            val textView = findViewById<TextView>(R.id.gnssInfoTextView)
+            if (gnssAntennaInfo != null) {
+                Log.i(TAG, gnssAntennaInfo.phaseCenterOffset.toString())
+                textView.text =
+                    "X Offset: ${gnssAntennaInfo.phaseCenterOffset.xOffsetMm} mm\nY Offset: ${gnssAntennaInfo.phaseCenterOffset.yOffsetMm} mm\nZ Offset: ${gnssAntennaInfo.phaseCenterOffset.zOffsetMm} mm"
+            }else {
+                Log.e(TAG, ERROR)
+                textView.text = ERROR
+            }
+        }
+    }
 
     override fun onDestroy() {
         super.onDestroy()
-        gnssAntennaInfoProvider.stopListening()
+        gnssInfoProvider!!.unregisterGnssAntennaInfoListener()
     }
 
-    override fun onGnssInfoReceived(xOffsetMm: Float, yOffsetMm: Float, zOffsetMm: Float) {
-        runOnUiThread {
-            val textView = findViewById<TextView>(R.id.gnssInfoTextView)
-            textView.text = "X Offset: $xOffsetMm mm\nY Offset: $yOffsetMm mm\nZ Offset: $zOffsetMm mm"
-        }
-    }
 }
